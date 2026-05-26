@@ -14,6 +14,7 @@ struct ApplicationDetailView: View {
 
     @State private var showingEditForm = false
     @State private var showingDeleteConfirmation = false
+    @State private var showingDeleteError = false
 
     var body: some View {
         List {
@@ -53,7 +54,14 @@ struct ApplicationDetailView: View {
 
             Section("Contact") {
                 DetailRow(title: "Name", value: displayValue(application.contactName))
-                DetailRow(title: "Email", value: displayValue(application.contactEmail))
+
+                if let emailURL {
+                    Link(destination: emailURL) {
+                        DetailRow(title: "Email", value: application.contactEmail)
+                    }
+                } else {
+                    DetailRow(title: "Email", value: displayValue(application.contactEmail))
+                }
             }
 
             Section("Notes") {
@@ -98,6 +106,11 @@ struct ApplicationDetailView: View {
         } message: {
             Text("This cannot be undone.")
         }
+        .alert("Could not delete", isPresented: $showingDeleteError) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text("Something went wrong while deleting this application. Please try again.")
+        }
     }
 
     private func displayValue(_ value: String) -> String {
@@ -105,10 +118,28 @@ struct ApplicationDetailView: View {
         return trimmedValue.isEmpty ? "Not provided" : trimmedValue
     }
 
+    private var emailURL: URL? {
+        let trimmedEmail = application.contactEmail.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard !trimmedEmail.isEmpty else {
+            return nil
+        }
+
+        return URL(string: "mailto:\(trimmedEmail)")
+    }
+
     private func deleteApplication() {
-        NotificationManager.shared.cancelFollowUpNotification(applicationID: application.id)
+        let applicationID = application.id
+
         modelContext.delete(application)
-        dismiss()
+
+        do {
+            try modelContext.save()
+            NotificationManager.shared.cancelFollowUpNotification(applicationID: applicationID)
+            dismiss()
+        } catch {
+            showingDeleteError = true
+        }
     }
 }
 
@@ -131,22 +162,7 @@ private struct DetailRow: View {
 
 #Preview {
     NavigationStack {
-        ApplicationDetailView(
-            application: InternshipApplication(
-                companyName: "Apple",
-                roleTitle: "iOS Software Engineering Intern",
-                status: .applied,
-                location: "Cupertino, CA",
-                workMode: .hybrid,
-                applicationURL: "https://apple.com/careers",
-                appliedDate: .now,
-                deadlineDate: .now.addingTimeInterval(604_800),
-                followUpDate: .now.addingTimeInterval(172_800),
-                contactName: "Recruiting Team",
-                contactEmail: "careers@example.com",
-                notes: "Follow up after the first screening call."
-            )
-        )
+        ApplicationDetailView(application: PreviewData.sampleApplication)
     }
-    .modelContainer(for: InternshipApplication.self, inMemory: true)
+    .modelContainer(PreviewData.previewContainer)
 }

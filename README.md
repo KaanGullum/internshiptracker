@@ -1,44 +1,42 @@
-# InternshipTracker – Codex Starter Pack
+# InternshipTracker
 
-Bu paket, SwiftUI + SwiftData ile geliştirilecek **Internship Tracker** uygulamasını Codex'e düzgün anlatmak için hazırlandı.
+InternshipTracker is a SwiftUI iOS app for students who want to track internship and junior job applications in one place.
 
-## Hedef
+## Features
 
-Üniversite öğrencilerinin staj/junior başvurularını takip edebileceği sade ama portfolyoda güçlü duran bir iOS uygulaması yapmak.
+- Dashboard statistics for total applications, active stages, offers, rejected applications, and follow-ups
+- Searchable application list
+- Status filtering
+- Sorting by newest, deadline, or follow-up date
+- Add, edit, and delete applications
+- Detail screen with dates, notes, contact info, email links, and application links
+- Optional local follow-up reminders
+- Overdue follow-up tracking
+- Local persistence with SwiftData
+- Light and Dark Mode support
 
-## Önerilen teknik tercih
+## Tech Stack
 
-- Platform: iOS 17+
-- UI: SwiftUI
-- Local persistence: SwiftData
-- Notifications: UserNotifications
-- Architecture: Basit MVVM'e yakın, ama gereksiz abstraction yok
-- Backend: Yok, ilk sürüm tamamen local
-- App Store MVP hedefi: Var
+- SwiftUI
+- SwiftData
+- UserNotifications
+- iOS 17+
+- No backend or external dependencies
 
-## Nasıl kullanılır?
+## Project Structure
 
-1. Xcode'da yeni proje oluştur:
-   - Product Name: `InternshipTracker`
-   - Interface: SwiftUI
-   - Language: Swift
-   - Minimum iOS: 17.0 veya üstü
-2. Bu dosyaları proje köküne koy:
-   - `AGENTS.md`
-   - `00_MAIN_CODEX_PROMPT.md`
-   - `01_PRODUCT_BRIEF.md`
-   - `02_FEATURE_SPEC.md`
-   - `03_DATA_MODEL.md`
-   - `04_UI_FLOW.md`
-   - `05_IMPLEMENTATION_PLAN.md`
-   - `06_TEST_CHECKLIST.md`
-   - `07_FUTURE_ROADMAP.md`
-3. VS Code/Codex'i proje klasöründe aç.
-4. Önce `00_MAIN_CODEX_PROMPT.md` içeriğini Codex'e gönder.
-5. Codex bitirince uygulamayı Xcode'da çalıştır.
-6. Hata olursa hata mesajını Codex'e aynen gönder.
-7. MVP çalıştıktan sonra feature feature ilerle.
+```text
+InternshipTracker/
+  InternshipTrackerApp.swift
+  Models/
+  Views/
+  Components/
+  Services/
+  Utilities/
+```
 
-## Önemli not
+The project intentionally keeps the MVP architecture simple and beginner-friendly. Views use SwiftUI directly, data is stored with SwiftData, and notification logic lives in a small service.
 
-Codex'ten tek seferde devasa uygulama isteme. İlk hedef: çalışan, local veri kaydeden, temiz görünümlü MVP.
+## Build
+
+Open `InternshipTracker.xcodeproj` in Xcode and run the `InternshipTracker` scheme on an iOS 17+ simulator.

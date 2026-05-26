@@ -63,22 +63,29 @@ struct DashboardView: View {
                             systemImage: "bell.badge",
                             color: .teal
                         )
+
+                        DashboardStatCard(
+                            title: "Overdue",
+                            value: overdueFollowUps.count,
+                            systemImage: "exclamationmark.triangle",
+                            color: .red
+                        )
                     }
 
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Needs Attention")
                             .font(.headline)
 
-                        if upcomingFollowUps.isEmpty {
+                        if needsAttentionApplications.isEmpty {
                             ContentUnavailableView(
-                                "No upcoming follow-ups",
+                                "No follow-ups need attention",
                                 systemImage: "checkmark.circle",
-                                description: Text("Applications with follow-up reminders in the next 7 days will appear here.")
+                                description: Text("Overdue reminders and follow-ups in the next 7 days will appear here.")
                             )
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)
                         } else {
-                            ForEach(upcomingFollowUps) { application in
+                            ForEach(needsAttentionApplications) { application in
                                 NavigationLink {
                                     ApplicationDetailView(application: application)
                                 } label: {
@@ -120,8 +127,21 @@ struct DashboardView: View {
     private var upcomingFollowUps: [InternshipApplication] {
         applications
             .filter { application in
-                application.followUpDate?.isInNextSevenDays == true
+                application.followUpDate?.isUpcomingInNextSevenDays == true
             }
+            .sorted { first, second in
+                (first.followUpDate ?? .distantFuture) < (second.followUpDate ?? .distantFuture)
+            }
+    }
+
+    private var overdueFollowUps: [InternshipApplication] {
+        applications.filter { application in
+            application.followUpDate?.isPastDue == true
+        }
+    }
+
+    private var needsAttentionApplications: [InternshipApplication] {
+        (overdueFollowUps + upcomingFollowUps)
             .sorted { first, second in
                 (first.followUpDate ?? .distantFuture) < (second.followUpDate ?? .distantFuture)
             }
@@ -134,5 +154,5 @@ struct DashboardView: View {
 
 #Preview {
     DashboardView()
-        .modelContainer(for: InternshipApplication.self, inMemory: true)
+        .modelContainer(PreviewData.previewContainer)
 }

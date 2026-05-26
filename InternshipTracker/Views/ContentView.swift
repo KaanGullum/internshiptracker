@@ -29,5 +29,5 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
-        .modelContainer(for: InternshipApplication.self, inMemory: true)
+        .modelContainer(PreviewData.previewContainer)
 }

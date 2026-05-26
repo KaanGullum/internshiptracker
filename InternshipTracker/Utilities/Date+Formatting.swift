@@ -14,12 +14,17 @@ extension Date {
         formatted(date: .abbreviated, time: .shortened)
     }
 
-    var isInNextSevenDays: Bool {
+    var isUpcomingInNextSevenDays: Bool {
         let now = Date()
+
         guard let sevenDaysFromNow = Calendar.current.date(byAdding: .day, value: 7, to: now) else {
             return false
         }
 
         return self >= now && self <= sevenDaysFromNow
+    }
+
+    var isPastDue: Bool {
+        self < Date()
     }
 }

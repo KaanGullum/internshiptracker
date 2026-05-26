@@ -45,15 +45,6 @@ struct ApplicationRowView: View {
 
 #Preview {
     List {
-        ApplicationRowView(
-            application: InternshipApplication(
-                companyName: "Apple",
-                roleTitle: "iOS Software Engineering Intern",
-                status: .interview,
-                location: "Cupertino, CA",
-                workMode: .hybrid,
-                followUpDate: .now.addingTimeInterval(86_400)
-            )
-        )
+        ApplicationRowView(application: PreviewData.sampleApplication)
     }
 }

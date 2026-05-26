@@ -23,16 +23,15 @@ final class NotificationManager {
         roleTitle: String,
         followUpDate: Date
     ) async -> Bool {
+        cancelFollowUpNotification(applicationID: applicationID)
+
         guard followUpDate > Date() else {
-            cancelFollowUpNotification(applicationID: applicationID)
             return false
         }
 
         guard await requestPermissionIfNeeded() else {
             return false
         }
-
-        cancelFollowUpNotification(applicationID: applicationID)
 
         let content = UNMutableNotificationContent()
         content.title = "Follow up with \(companyName)"
@@ -62,6 +61,21 @@ final class NotificationManager {
         let identifier = notificationIdentifier(for: applicationID)
         notificationCenter.removePendingNotificationRequests(withIdentifiers: [identifier])
         notificationCenter.removeDeliveredNotifications(withIdentifiers: [identifier])
+    }
+
+    func permissionStatusDescription() async -> String {
+        let settings = await notificationCenter.notificationSettings()
+
+        switch settings.authorizationStatus {
+        case .authorized, .provisional, .ephemeral:
+            return "Reminders are allowed"
+        case .notDetermined:
+            return "Reminders are not set up yet"
+        case .denied:
+            return "Reminders are turned off"
+        @unknown default:
+            return "Reminder status is unavailable"
+        }
     }
 
     private func requestPermissionIfNeeded() async -> Bool {

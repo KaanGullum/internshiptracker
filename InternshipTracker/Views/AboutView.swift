@@ -6,6 +6,8 @@
 import SwiftUI
 
 struct AboutView: View {
+    @State private var reminderPermissionStatus = "Checking reminder status..."
+
     var body: some View {
         NavigationStack {
             Form {
@@ -27,11 +29,18 @@ struct AboutView: View {
                     Label("Add notes, links, and contacts", systemImage: "square.and.pencil")
                 }
 
+                Section("Reminders") {
+                    Label(reminderPermissionStatus, systemImage: "bell")
+                }
+
                 Section("Privacy") {
                     Text("Your application data stays on this device. You do not need an account to use the app.")
                 }
             }
             .navigationTitle("About")
+            .task {
+                reminderPermissionStatus = await NotificationManager.shared.permissionStatusDescription()
+            }
         }
     }
 }

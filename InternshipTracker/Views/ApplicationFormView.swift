@@ -27,7 +27,9 @@ struct ApplicationFormView: View {
     @State private var contactName: String
     @State private var contactEmail: String
     @State private var notes: String
-    @State private var showingValidationAlert = false
+    @State private var alertTitle = ""
+    @State private var alertMessage = ""
+    @State private var showingAlert = false
 
     init(application: InternshipApplication? = nil) {
         self.application = application
@@ -131,21 +133,51 @@ struct ApplicationFormView: View {
 
             ToolbarItem(placement: .confirmationAction) {
                 Button("Save", action: saveApplication)
+                    .disabled(!canSaveRequiredFields)
             }
         }
-        .alert("Missing required information", isPresented: $showingValidationAlert) {
+        .alert(alertTitle, isPresented: $showingAlert) {
             Button("OK", role: .cancel) { }
         } message: {
-            Text("Please enter both a company name and a role title.")
+            Text(alertMessage)
         }
     }
 
     private func saveApplication() {
         let trimmedCompanyName = companyName.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedRoleTitle = roleTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedApplicationURL = trimmed(applicationURL)
+        let trimmedContactEmail = trimmed(contactEmail)
 
         guard !trimmedCompanyName.isEmpty, !trimmedRoleTitle.isEmpty else {
-            showingValidationAlert = true
+            showAlert(
+                title: "Missing required information",
+                message: "Please enter both a company name and a role title."
+            )
+            return
+        }
+
+        guard trimmedApplicationURL.isEmpty || InternshipApplication.normalizedURL(from: trimmedApplicationURL) != nil else {
+            showAlert(
+                title: "Invalid URL",
+                message: "Please enter a valid application link or leave the field empty."
+            )
+            return
+        }
+
+        guard trimmedContactEmail.isEmpty || isValidEmail(trimmedContactEmail) else {
+            showAlert(
+                title: "Invalid email",
+                message: "Please enter a valid contact email or leave the field empty."
+            )
+            return
+        }
+
+        guard !hasFollowUpDate || followUpDate > Date() else {
+            showAlert(
+                title: "Invalid reminder date",
+                message: "Please choose a future date and time for the follow-up reminder."
+            )
             return
         }
 
@@ -157,12 +189,12 @@ struct ApplicationFormView: View {
             application.status = status
             application.location = trimmed(location)
             application.workMode = workMode
-            application.applicationURL = trimmed(applicationURL)
+            application.applicationURL = trimmedApplicationURL
             application.appliedDate = hasAppliedDate ? appliedDate : nil
             application.deadlineDate = hasDeadlineDate ? deadlineDate : nil
             application.followUpDate = hasFollowUpDate ? followUpDate : nil
             application.contactName = trimmed(contactName)
-            application.contactEmail = trimmed(contactEmail)
+            application.contactEmail = trimmedContactEmail
             application.notes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
             application.updatedAt = .now
             savedApplication = application
@@ -173,20 +205,28 @@ struct ApplicationFormView: View {
                 status: status,
                 location: trimmed(location),
                 workMode: workMode,
-                applicationURL: trimmed(applicationURL),
+                applicationURL: trimmedApplicationURL,
                 appliedDate: hasAppliedDate ? appliedDate : nil,
                 deadlineDate: hasDeadlineDate ? deadlineDate : nil,
                 followUpDate: hasFollowUpDate ? followUpDate : nil,
                 contactName: trimmed(contactName),
-                contactEmail: trimmed(contactEmail),
+                contactEmail: trimmedContactEmail,
                 notes: notes.trimmingCharacters(in: .whitespacesAndNewlines)
             )
             modelContext.insert(newApplication)
             savedApplication = newApplication
         }
 
-        updateNotification(for: savedApplication)
-        dismiss()
+        do {
+            try modelContext.save()
+            updateNotification(for: savedApplication)
+            dismiss()
+        } catch {
+            showAlert(
+                title: "Could not save",
+                message: "Something went wrong while saving this application. Please try again."
+            )
+        }
     }
 
     private func updateNotification(for application: InternshipApplication) {
@@ -211,6 +251,20 @@ struct ApplicationFormView: View {
 
     private func trimmed(_ value: String) -> String {
         value.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var canSaveRequiredFields: Bool {
+        !trimmed(companyName).isEmpty && !trimmed(roleTitle).isEmpty
+    }
+
+    private func isValidEmail(_ value: String) -> Bool {
+        value.contains("@") && value.contains(".") && !value.contains(" ")
+    }
+
+    private func showAlert(title: String, message: String) {
+        alertTitle = title
+        alertMessage = message
+        showingAlert = true
     }
 }
 

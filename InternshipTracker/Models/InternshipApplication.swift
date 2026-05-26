@@ -69,16 +69,24 @@ final class InternshipApplication: Identifiable {
     }
 
     var applicationLinkURL: URL? {
-        let trimmedURL = applicationURL.trimmingCharacters(in: .whitespacesAndNewlines)
+        Self.normalizedURL(from: applicationURL)
+    }
+
+    static func normalizedURL(from value: String) -> URL? {
+        let trimmedURL = value.trimmingCharacters(in: .whitespacesAndNewlines)
 
         guard !trimmedURL.isEmpty else {
             return nil
         }
 
-        if let url = URL(string: trimmedURL), url.scheme != nil {
+        if let url = URL(string: trimmedURL), url.scheme != nil, url.host != nil {
             return url
         }
 
-        return URL(string: "https://\(trimmedURL)")
+        guard let url = URL(string: "https://\(trimmedURL)"), url.host != nil else {
+            return nil
+        }
+
+        return url
     }
 }
