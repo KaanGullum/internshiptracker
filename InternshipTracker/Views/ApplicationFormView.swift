@@ -141,6 +141,11 @@ struct ApplicationFormView: View {
         } message: {
             Text(alertMessage)
         }
+        .onChange(of: hasFollowUpDate) { _, isEnabled in
+            if isEnabled && followUpDate <= Date() {
+                followUpDate = Calendar.current.date(byAdding: .day, value: 1, to: .now) ?? .now.addingTimeInterval(86_400)
+            }
+        }
     }
 
     private func saveApplication() {
@@ -230,6 +235,11 @@ struct ApplicationFormView: View {
     }
 
     private func updateNotification(for application: InternshipApplication) {
+        guard application.status != .archived else {
+            NotificationManager.shared.cancelFollowUpNotification(applicationID: application.id)
+            return
+        }
+
         guard let followUpDate = application.followUpDate else {
             NotificationManager.shared.cancelFollowUpNotification(applicationID: application.id)
             return

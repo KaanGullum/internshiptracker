@@ -8,12 +8,15 @@ InternshipTracker is a SwiftUI iOS app for students who want to track internship
 - Searchable application list
 - Status filtering
 - Sorting by newest, deadline, or follow-up date
+- Active applications by default, with archived applications available through filtering
 - Add, edit, and delete applications
+- Archive applications without losing their details
 - Detail screen with dates, notes, contact info, email links, and application links
 - Optional local follow-up reminders
 - Overdue follow-up tracking
 - Local persistence with SwiftData
 - Light and Dark Mode support
+- Custom app icon and accent color
 
 ## Tech Stack
 

@@ -69,6 +69,20 @@ enum PreviewData {
                 contactName: "",
                 contactEmail: "",
                 notes: "Review offer details and ask about mentorship."
+            ),
+            InternshipApplication(
+                companyName: "Meta",
+                roleTitle: "Software Engineer Intern",
+                status: .archived,
+                location: "London, UK",
+                workMode: .unknown,
+                applicationURL: "https://www.metacareers.com",
+                appliedDate: .now.addingTimeInterval(-1_209_600),
+                deadlineDate: nil,
+                followUpDate: nil,
+                contactName: "",
+                contactEmail: "",
+                notes: "Archived after the hiring season ended."
             )
         ]
     }

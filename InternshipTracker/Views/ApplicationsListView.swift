@@ -34,7 +34,7 @@ struct ApplicationsListView: View {
                             ContentUnavailableView(
                                 "No matching applications",
                                 systemImage: "magnifyingglass",
-                                description: Text("Try changing the search text, status filter, or sort option.")
+                                description: Text(emptyFilterDescription)
                             )
                         } else {
                             List {
@@ -43,6 +43,16 @@ struct ApplicationsListView: View {
                                         ApplicationDetailView(application: application)
                                     } label: {
                                         ApplicationRowView(application: application)
+                                    }
+                                    .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                                        if application.status != .archived {
+                                            Button {
+                                                archiveApplication(application)
+                                            } label: {
+                                                Label("Archive", systemImage: "archivebox")
+                                            }
+                                            .tint(.gray)
+                                        }
                                     }
                                 }
                                 .onDelete(perform: deleteApplications)
@@ -68,10 +78,10 @@ struct ApplicationsListView: View {
                     ApplicationFormView()
                 }
             }
-            .alert("Could not delete", isPresented: $showingDeleteError) {
+            .alert("Could not update applications", isPresented: $showingDeleteError) {
                 Button("OK", role: .cancel) { }
             } message: {
-                Text("Something went wrong while deleting the selected application. Please try again.")
+                Text("Something went wrong while updating the selected application. Please try again.")
             }
         }
     }
@@ -81,14 +91,14 @@ struct ApplicationsListView: View {
             HStack(spacing: 10) {
                 Menu {
                     Picker("Status", selection: $selectedStatus) {
-                        Text("All Statuses").tag(ApplicationStatus?.none)
+                        Text("Active").tag(ApplicationStatus?.none)
 
                         ForEach(ApplicationStatus.allCases) { status in
                             Text(status.rawValue).tag(Optional(status))
                         }
                     }
                 } label: {
-                    Label(selectedStatus?.rawValue ?? "All Statuses", systemImage: "line.3.horizontal.decrease.circle")
+                    Label(selectedStatus?.rawValue ?? "Active", systemImage: "line.3.horizontal.decrease.circle")
                 }
                 .buttonStyle(.bordered)
 
@@ -108,6 +118,15 @@ struct ApplicationsListView: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .monospacedDigit()
+
+                if hasActiveFilters {
+                    Button {
+                        clearFilters()
+                    } label: {
+                        Label("Clear", systemImage: "xmark.circle")
+                    }
+                    .buttonStyle(.bordered)
+                }
             }
             .padding(.horizontal)
             .padding(.vertical, 10)
@@ -119,7 +138,14 @@ struct ApplicationsListView: View {
         let trimmedSearchText = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
 
         return applications.filter { application in
-            let matchesStatus = selectedStatus == nil || application.status == selectedStatus
+            let matchesStatus: Bool
+
+            if let selectedStatus {
+                matchesStatus = application.status == selectedStatus
+            } else {
+                matchesStatus = application.status != .archived
+            }
+
             let matchesSearch = trimmedSearchText.isEmpty
                 || application.companyName.localizedCaseInsensitiveContains(trimmedSearchText)
                 || application.roleTitle.localizedCaseInsensitiveContains(trimmedSearchText)
@@ -157,6 +183,38 @@ struct ApplicationsListView: View {
         } catch {
             showingDeleteError = true
         }
+    }
+
+    private func archiveApplication(_ application: InternshipApplication) {
+        application.status = .archived
+        application.updatedAt = .now
+
+        do {
+            try modelContext.save()
+            NotificationManager.shared.cancelFollowUpNotification(applicationID: application.id)
+        } catch {
+            showingDeleteError = true
+        }
+    }
+
+    private var hasActiveFilters: Bool {
+        !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            || selectedStatus != nil
+            || sortOption != .newest
+    }
+
+    private var emptyFilterDescription: String {
+        if selectedStatus == nil {
+            "Archived applications are hidden by default. Clear filters or choose Archived to view them."
+        } else {
+            "Try changing the search text, status filter, or sort option."
+        }
+    }
+
+    private func clearFilters() {
+        searchText = ""
+        selectedStatus = nil
+        sortOption = .newest
     }
 
     private func compareOptionalDates(_ firstDate: Date?, _ secondDate: Date?, fallback: Bool) -> Bool {

@@ -27,15 +27,17 @@ struct ApplicationRowView: View {
 
             HStack(spacing: 12) {
                 Label(application.workMode.rawValue, systemImage: application.workMode.systemImage)
+                    .foregroundStyle(.secondary)
 
                 if let followUpDate = application.followUpDate {
                     Label(followUpDate.reminderDateText, systemImage: "bell")
+                        .foregroundStyle(followUpDate.isPastDue ? .red : .secondary)
                 } else if let deadlineDate = application.deadlineDate {
                     Label(deadlineDate.applicationDateText, systemImage: "calendar")
+                        .foregroundStyle(.secondary)
                 }
             }
             .font(.caption)
-            .foregroundStyle(.secondary)
             .lineLimit(1)
         }
         .padding(.vertical, 4)

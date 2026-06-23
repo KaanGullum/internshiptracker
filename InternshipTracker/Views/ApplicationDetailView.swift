@@ -15,6 +15,7 @@ struct ApplicationDetailView: View {
     @State private var showingEditForm = false
     @State private var showingDeleteConfirmation = false
     @State private var showingDeleteError = false
+    @State private var showingUpdateError = false
 
     var body: some View {
         List {
@@ -39,7 +40,7 @@ struct ApplicationDetailView: View {
 
                 if let url = application.applicationLinkURL {
                     Link(destination: url) {
-                        DetailRow(title: "Application URL", value: url.absoluteString)
+                        Label("Open Application Page", systemImage: "safari")
                     }
                 } else {
                     DetailRow(title: "Application URL", value: "Not provided")
@@ -57,7 +58,7 @@ struct ApplicationDetailView: View {
 
                 if let emailURL {
                     Link(destination: emailURL) {
-                        DetailRow(title: "Email", value: application.contactEmail)
+                        Label(application.contactEmail, systemImage: "envelope")
                     }
                 } else {
                     DetailRow(title: "Email", value: displayValue(application.contactEmail))
@@ -80,6 +81,16 @@ struct ApplicationDetailView: View {
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Edit") {
                     showingEditForm = true
+                }
+            }
+
+            ToolbarItem(placement: .bottomBar) {
+                if application.status != .archived {
+                    Button {
+                        archiveApplication()
+                    } label: {
+                        Label("Archive", systemImage: "archivebox")
+                    }
                 }
             }
 
@@ -111,6 +122,11 @@ struct ApplicationDetailView: View {
         } message: {
             Text("Something went wrong while deleting this application. Please try again.")
         }
+        .alert("Could not update", isPresented: $showingUpdateError) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text("Something went wrong while updating this application. Please try again.")
+        }
     }
 
     private func displayValue(_ value: String) -> String {
@@ -126,6 +142,18 @@ struct ApplicationDetailView: View {
         }
 
         return URL(string: "mailto:\(trimmedEmail)")
+    }
+
+    private func archiveApplication() {
+        application.status = .archived
+        application.updatedAt = .now
+
+        do {
+            try modelContext.save()
+            NotificationManager.shared.cancelFollowUpNotification(applicationID: application.id)
+        } catch {
+            showingUpdateError = true
+        }
     }
 
     private func deleteApplication() {

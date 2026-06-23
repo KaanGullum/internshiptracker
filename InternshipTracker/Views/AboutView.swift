@@ -33,6 +33,10 @@ struct AboutView: View {
                     Label(reminderPermissionStatus, systemImage: "bell")
                 }
 
+                Section("App") {
+                    LabeledContent("Version", value: appVersion)
+                }
+
                 Section("Privacy") {
                     Text("Your application data stays on this device. You do not need an account to use the app.")
                 }
@@ -42,6 +46,12 @@ struct AboutView: View {
                 reminderPermissionStatus = await NotificationManager.shared.permissionStatusDescription()
             }
         }
+    }
+
+    private var appVersion: String {
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+        let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
+        return "\(version) (\(build))"
     }
 }
 
